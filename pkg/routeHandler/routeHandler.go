@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
-	"ncpdpDestination/pkg/pbmlib"
+	"github.com/transactrx/ncpdpDestination/pkg/pbmlib"
 
 	"time"
 )
