@@ -1,4 +1,4 @@
-package pbm
+package pbmlib
 
 import (
 	"time"

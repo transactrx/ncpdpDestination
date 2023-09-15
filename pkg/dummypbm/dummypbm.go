@@ -3,14 +3,14 @@ package dummypbm
 import (
 	"errors"
 	"fmt"
-	"ncpdpDestination/pkg/pbm"
 	"ncpdpDestination/pkg/pbmerrors"
+	"ncpdpDestination/pkg/pbmlib"
 	"time"
 )
 
 type DummyPBM struct {
 	URL        string
-	statistics pbm.Stats
+	statistics pbmlib.Stats
 }
 
 func (d *DummyPBM) Start(m map[string]interface{}) error {
@@ -39,9 +39,9 @@ func (d *DummyPBM) Test(claim []byte) ([]byte, pbmerrors.PBMError) {
 	return nil, nil
 }
 
-func (d *DummyPBM) GetStats() pbm.Stats {
+func (d *DummyPBM) GetStats() pbmlib.Stats {
 	//TODO implement me
-	return pbm.Stats{}
+	return pbmlib.Stats{}
 }
 
 func (d *DummyPBM) Shutdown() error {

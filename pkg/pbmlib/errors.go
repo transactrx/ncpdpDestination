@@ -1,4 +1,4 @@
-package pbm
+package pbmlib
 
 type ErrorInfo struct {
 	Message     string
