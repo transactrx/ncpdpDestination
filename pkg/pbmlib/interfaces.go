@@ -6,7 +6,7 @@ import (
 
 type PBM interface {
 	Start(map[string]interface{}) error
-	Post(claim []byte, header map[string][]string, timeout time.Duration) ([]byte, ErrorInfo)
+	Post(clm Claim, header map[string][]string, timeout time.Duration) ([]byte, map[string][]string, ErrorInfo)
 	Test(claim []byte) ([]byte, ErrorInfo)
 	GetStats() Stats
 	Shutdown() error

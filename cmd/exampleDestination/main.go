@@ -21,7 +21,7 @@ type Config struct {
 }
 
 func main() {
-	d := dummypbm.DummyPBM{}
+	dummyPBM := dummypbm.DummyPBM{}
 	cfg := readConfiguration()
 	nc, err := natshelper.CreateNatsClient(cfg.NatsJWT, cfg.NatsKey, cfg.NatsURL)
 	if err != nil {
@@ -30,7 +30,7 @@ func main() {
 
 	for _, route := range cfg.Routes {
 		if strings.Trim(route, "") != "" {
-			go routeHandler.HandleRoute(nc, &d, route, cfg.NatsPublicSubject, cfg.NatsPrivateSubjectPrefix, time.Second*20)
+			go routeHandler.HandleRoute(nc, &dummyPBM, route, cfg.NatsPublicSubject, cfg.NatsPrivateSubjectPrefix, time.Second*20)
 		}
 
 	}

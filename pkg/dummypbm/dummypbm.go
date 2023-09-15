@@ -3,10 +3,15 @@ package dummypbm
 import (
 	"errors"
 	"fmt"
-	"ncpdpDestination/pkg/pbmerrors"
 	"ncpdpDestination/pkg/pbmlib"
 	"time"
 )
+
+//	Start(map[string]interface{}) error
+//	Post(clm Claim, header map[string][]string, timeout time.Duration) ([]byte, ErrorInfo)
+//	Test(claim []byte) ([]byte, ErrorInfo)
+//	GetStats() Stats
+//	Shutdown() error
 
 type DummyPBM struct {
 	URL        string
@@ -25,18 +30,19 @@ func (d *DummyPBM) Start(m map[string]interface{}) error {
 	return nil
 }
 
-func (d *DummyPBM) Post(claim []byte, header map[string][]string, timeout time.Duration) ([]byte, pbmerrors.PBMError) {
+func (d *DummyPBM) Post(claim pbmlib.Claim, header map[string][]string, timeout time.Duration) ([]byte, map[string][]string, pbmlib.ErrorInfo) {
 	//TODO implement me
 
 	//tcp connect
 
 	//update
-	return nil, nil
+
+	return nil, nil, pbmlib.ErrorCode.TRX00
 }
 
-func (d *DummyPBM) Test(claim []byte) ([]byte, pbmerrors.PBMError) {
+func (d *DummyPBM) Test(claim []byte) ([]byte, pbmlib.ErrorInfo) {
 	//TODO implement me
-	return nil, nil
+	return nil, pbmlib.ErrorCode.TRX00
 }
 
 func (d *DummyPBM) GetStats() pbmlib.Stats {
