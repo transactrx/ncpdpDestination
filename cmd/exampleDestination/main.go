@@ -1,10 +1,10 @@
 package main
 
 import (
+	"github.com/transactrx/ncpdpDestination/pkg/dummypbm"
+	"github.com/transactrx/ncpdpDestination/pkg/natshelper"
+	"github.com/transactrx/ncpdpDestination/pkg/routeHandler"
 	"log"
-	"ncpdpDestination/pkg/dummypbm"
-	"ncpdpDestination/pkg/natshelper"
-	"ncpdpDestination/pkg/routeHandler"
 	"os"
 	"runtime"
 	"strings"

@@ -3,7 +3,7 @@ package dummypbm
 import (
 	"errors"
 	"fmt"
-	"ncpdpDestination/pkg/pbmlib"
+	"github.com/transactrx/ncpdpDestination/pkg/pbmlib"
 	"time"
 )
 
