@@ -10,7 +10,20 @@ import (
 
 func HandleRoute(nc *nats.Conn, pbm pbmlib.PBM, route, natsPublicSubject, natsPrivateSubject string, timeout time.Duration) (*nats.Subscription, *nats.Subscription, error) {
 
-	sub, err := nc.Subscribe(natsPublicSubject, func(msg *nats.Msg) {
+	sub, err := subscribeToSubject(nc, pbm, route, natsPublicSubject, natsPrivateSubject, timeout)
+	if err != nil {
+		return nil, nil, err
+	}
+	privSub, err := subscribeToSubject(nc, pbm, route, natsPrivateSubject, natsPrivateSubject, timeout)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return sub, privSub, nil
+}
+
+func subscribeToSubject(nc *nats.Conn, pbm pbmlib.PBM, route, subscrptionSubject, natsPrivateSubject string, timeout time.Duration) (*nats.Subscription, error) {
+	sub, err := nc.Subscribe(subscrptionSubject, func(msg *nats.Msg) {
 		data := msg.Data
 		headers := map[string][]string(msg.Header)
 		//Claim Object
@@ -27,27 +40,9 @@ func HandleRoute(nc *nats.Conn, pbm pbmlib.PBM, route, natsPublicSubject, natsPr
 
 	})
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
-
-	//private sub
-	privSub, err := nc.Subscribe(natsPrivateSubject, func(msg *nats.Msg) {
-		data := msg.Data
-		headers := map[string][]string(msg.Header)
-
-		go postToPBM(pbm, data, headers, timeout, func(resp []byte, respHeader map[string][]string, err pbmlib.ErrorInfo) {
-
-			nc.PublishMsg(&nats.Msg{
-				Data: resp,
-			})
-		})
-
-	})
-	if err != nil {
-		return sub, nil, err
-	}
-
-	return sub, privSub, nil
+	return sub, nil
 }
 
 func postToPBM(pbm pbmlib.PBM, requestBuffer []byte, headers map[string][]string, timeout time.Duration, f func(response *pbmlib.Response, respHeader map[string][]string, err *pbmlib.ErrorInfo)) {
