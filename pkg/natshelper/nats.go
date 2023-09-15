@@ -8,7 +8,7 @@ import (
 )
 
 func setupConnOptions(opts []nats.Option) []nats.Option {
-	totalWait := 15 * time.Minute
+	totalWait := 8760 * time.Hour
 	reconnectDelay := time.Second
 	opts = append(opts, nats.ReconnectWait(reconnectDelay))
 	opts = append(opts, nats.MaxReconnects(int(totalWait/reconnectDelay)))
@@ -31,10 +31,4 @@ func CreateNatsClient(jwt, key, url string) (*nats.Conn, error) {
 	opts = setupConnOptions(opts)
 	return nats.Connect(url, opts...)
 
-}
-
-func CreateNatsClientLocal(url string) (*nats.Conn, error) {
-	opts := []nats.Option{}
-	opts = setupConnOptions(opts)
-	return nats.Connect(url, opts...)
 }

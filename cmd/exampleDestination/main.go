@@ -1,13 +1,16 @@
 package main
 
 import (
+	"fmt"
+	"github.com/nats-io/nats.go"
 	"github.com/transactrx/ncpdpDestination/pkg/dummypbm"
 	"github.com/transactrx/ncpdpDestination/pkg/natshelper"
 	"github.com/transactrx/ncpdpDestination/pkg/routeHandler"
 	"log"
 	"os"
-	"runtime"
+	"os/signal"
 	"strings"
+	"syscall"
 	"time"
 )
 
@@ -21,6 +24,9 @@ type Config struct {
 	Routes                   []string
 }
 
+var publicSubscriptions map[string]*nats.Subscription = make(map[string]*nats.Subscription)
+var privateSubscriptions map[string]*nats.Subscription = make(map[string]*nats.Subscription)
+
 func main() {
 	dummyPBM := dummypbm.DummyPBM{}
 	cfg := readConfiguration()
@@ -30,15 +36,53 @@ func main() {
 		log.Panicf("error while connecting to nats: %v", err)
 	}
 
-	for _, route := range cfg.Routes {
+	for i, route := range cfg.Routes {
 		if strings.Trim(route, "") != "" {
-			go routeHandler.HandleRoute(nc, &dummyPBM, route, cfg.NatsPublicSubject, cfg.NatsPrivateSubjectPrefix, cfg.NatsQueue, time.Second*20)
+			go func() {
+				publicSub, privateSub, err := routeHandler.HandleRoute(nc, &dummyPBM, route, cfg.NatsPublicSubject, cfg.NatsPrivateSubjectPrefix, cfg.NatsQueue, time.Second*20)
+				if err != nil {
+					log.Panicf("error while handling route %s: %v", route, err)
+				}
+
+				routeK := fmt.Sprintf("%d", i)
+				publicSubscriptions[routeK] = publicSub
+				privateSubscriptions[routeK] = privateSub
+			}()
 		}
 
 	}
+	dummyPBM.Start()
 
-	runtime.Goexit()
+	DrainSubscriptions()
 
+}
+
+func DrainSubscriptions() {
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		for sig := range sigChan {
+			switch sig {
+			case syscall.SIGINT:
+				for route, sub := range privateSubscriptions {
+					log.Printf("Draining private subscription for route %s", route)
+					_ = sub.Drain()
+				}
+				for route, sub := range publicSubscriptions {
+					log.Printf("Draining public subscription for route %s", route)
+					_ = sub.Drain()
+				}
+				os.Exit(1)
+
+			case syscall.SIGTERM:
+				fmt.Println("Received SIGTERM!")
+				// Handle SIGTERM specific tasks here
+				os.Exit(1)
+			}
+		}
+	}()
+
+	select {}
 }
 
 func readConfiguration() Config {
