@@ -1,8 +1,6 @@
 package dummypbm
 
 import (
-	"errors"
-	"fmt"
 	"github.com/transactrx/ncpdpDestination/pkg/pbmlib"
 	"time"
 )
@@ -19,15 +17,7 @@ type DummyPBM struct {
 	lastResponseGood bool
 }
 
-func (d *DummyPBM) Start(m map[string]interface{}) error {
-
-	url, ok := m["URL"]
-	if !ok {
-		return errors.New("URL Required")
-	}
-	d.URL = fmt.Sprintf("%v", url)
-
-	//TODO implement me
+func (d *DummyPBM) Start() error {
 	return nil
 }
 
