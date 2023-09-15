@@ -14,8 +14,9 @@ import (
 //	Shutdown() error
 
 type DummyPBM struct {
-	URL        string
-	statistics pbmlib.Stats
+	URL              string
+	statistics       pbmlib.Stats
+	lastResponseGood bool
 }
 
 func (d *DummyPBM) Start(m map[string]interface{}) error {
@@ -31,13 +32,18 @@ func (d *DummyPBM) Start(m map[string]interface{}) error {
 }
 
 func (d *DummyPBM) Post(claim pbmlib.Claim, header map[string][]string, timeout time.Duration) ([]byte, map[string][]string, pbmlib.ErrorInfo) {
-	//TODO implement me
 
-	//tcp connect
-
-	//update
-
-	return nil, nil, pbmlib.ErrorCode.TRX00
+	good := true
+	if d.lastResponseGood {
+		good = false
+		d.lastResponseGood = false
+	} else {
+		d.lastResponseGood = true
+	}
+	if good {
+		return []byte("GOOD RESPONSE"), nil, pbmlib.ErrorCode.TRX00
+	}
+	return []byte(""), nil, pbmlib.ErrorCode.TRX01
 }
 
 func (d *DummyPBM) Test(claim []byte) ([]byte, pbmlib.ErrorInfo) {

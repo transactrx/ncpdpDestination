@@ -3,6 +3,7 @@ module ncpdpDestination
 go 1.21.0
 
 require (
+	github.com/google/uuid v1.3.1 // indirect
 	github.com/klauspost/compress v1.16.5 // indirect
 	github.com/nats-io/nats.go v1.28.0 // indirect
 	github.com/nats-io/nkeys v0.4.4 // indirect

@@ -6,6 +6,7 @@ import (
 	"ncpdpDestination/pkg/natshelper"
 	"ncpdpDestination/pkg/routeHandler"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -23,6 +24,7 @@ type Config struct {
 func main() {
 	dummyPBM := dummypbm.DummyPBM{}
 	cfg := readConfiguration()
+
 	nc, err := natshelper.CreateNatsClient(cfg.NatsJWT, cfg.NatsKey, cfg.NatsURL)
 	if err != nil {
 		log.Panicf("error while connecting to nats: %v", err)
@@ -30,10 +32,12 @@ func main() {
 
 	for _, route := range cfg.Routes {
 		if strings.Trim(route, "") != "" {
-			go routeHandler.HandleRoute(nc, &dummyPBM, route, cfg.NatsPublicSubject, cfg.NatsPrivateSubjectPrefix, time.Second*20)
+			go routeHandler.HandleRoute(nc, &dummyPBM, route, cfg.NatsPublicSubject, cfg.NatsPrivateSubjectPrefix, cfg.NatsQueue, time.Second*20)
 		}
 
 	}
+
+	runtime.Goexit()
 
 }
 

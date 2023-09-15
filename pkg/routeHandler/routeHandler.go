@@ -2,33 +2,41 @@ package routeHandler
 
 import (
 	"encoding/json"
+	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
 	"ncpdpDestination/pkg/pbmlib"
 
 	"time"
 )
 
-func HandleRoute(nc *nats.Conn, pbm pbmlib.PBM, route, natsPublicSubject, natsPrivateSubject string, timeout time.Duration) (*nats.Subscription, *nats.Subscription, error) {
+func HandleRoute(nc *nats.Conn, pbm pbmlib.PBM, route, natsPublicSubject, natsPrivateSubject, natsQueue string, timeout time.Duration) (*nats.Subscription, *nats.Subscription, error) {
 
-	sub, err := subscribeToSubject(nc, pbm, route, natsPublicSubject, natsPrivateSubject, timeout)
+	privateId := uuid.New().String()
+	natsPrivateSubject = natsPrivateSubject + "." + privateId + "." + route
+	natsPublicSubject = natsPublicSubject + "." + route
+
+	sub, err := subscribeToSubject(nc, pbm, natsQueue, natsPublicSubject, natsPrivateSubject, timeout)
 	if err != nil {
 		return nil, nil, err
 	}
-	privSub, err := subscribeToSubject(nc, pbm, route, natsPrivateSubject, natsPrivateSubject, timeout)
+	privateSub, err := subscribeToSubject(nc, pbm, natsQueue, natsPrivateSubject, natsPrivateSubject, timeout)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	return sub, privSub, nil
+	return sub, privateSub, nil
 }
 
-func subscribeToSubject(nc *nats.Conn, pbm pbmlib.PBM, route, subscrptionSubject, natsPrivateSubject string, timeout time.Duration) (*nats.Subscription, error) {
-	sub, err := nc.Subscribe(subscrptionSubject, func(msg *nats.Msg) {
+func subscribeToSubject(nc *nats.Conn, pbm pbmlib.PBM, natsQueue, subject, natsPrivateSubject string, timeout time.Duration) (*nats.Subscription, error) {
+	sub, err := nc.QueueSubscribe(subject, natsQueue, func(msg *nats.Msg) {
 		data := msg.Data
 		headers := map[string][]string(msg.Header)
 		//Claim Object
 
 		go postToPBM(pbm, data, headers, timeout, func(response *pbmlib.Response, respHeader map[string][]string, err *pbmlib.ErrorInfo) {
+			if respHeader == nil {
+				respHeader = make(map[string][]string)
+			}
 			respMsg := nats.Msg{
 				Data:    response.ToJSON(),
 				Header:  nats.Header(respHeader),
@@ -58,9 +66,9 @@ func postToPBM(pbm pbmlib.PBM, requestBuffer []byte, headers map[string][]string
 		f(&resp, nil, &pbmlib.ErrorCode.TRX01)
 		return
 	}
-
+	clm.TimeRcvd = time.Now()
 	responseBuffer, responseHeaders, erroInfo := pbm.Post(clm, headers, timeout)
-	if erroInfo.Code != "TRX00" {
+	if erroInfo.Code == pbmlib.ErrorCode.TRX00.Code {
 		//build response
 		resp := pbmlib.Response{}
 		resp.BuildResponseSuccess(clm, clm.TimeRcvd, responseBuffer)

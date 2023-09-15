@@ -32,3 +32,9 @@ func CreateNatsClient(jwt, key, url string) (*nats.Conn, error) {
 	return nats.Connect(url, opts...)
 
 }
+
+func CreateNatsClientLocal(url string) (*nats.Conn, error) {
+	opts := []nats.Option{}
+	opts = setupConnOptions(opts)
+	return nats.Connect(url, opts...)
+}
