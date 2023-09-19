@@ -2,6 +2,7 @@ package dummypbm
 
 import (
 	"github.com/transactrx/ncpdpDestination/pkg/pbmlib"
+	"log"
 	"time"
 )
 
@@ -12,8 +13,10 @@ import (
 //	Shutdown() error
 
 type DummyPBM struct {
-	URL              string
-	statistics       pbmlib.Stats
+	Name       string
+	Latency    time.Duration
+	statistics pbmlib.Stats
+
 	lastResponseGood bool
 }
 
@@ -21,8 +24,10 @@ func (d *DummyPBM) Start() error {
 	return nil
 }
 
-func (d *DummyPBM) Post(claim pbmlib.Claim, header map[string][]string, timeout time.Duration) ([]byte, map[string][]string, pbmlib.ErrorInfo) {
+func (d *DummyPBM) Post(claim pbmlib.Claim, header map[string][]string, timeout time.Duration, privateMessage bool) ([]byte, map[string][]string, pbmlib.ErrorInfo) {
 
+	log.Printf("Got Message: %s", d.Name)
+	time.Sleep(d.Latency)
 	good := true
 	if d.lastResponseGood {
 		good = false
