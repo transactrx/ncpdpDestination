@@ -44,12 +44,12 @@ func NewPBMHandler() (*PBMHandler, error) {
 
 	nc, err := natshelper.CreateNatsClient(ph.natsJWT, ph.natsKey, ph.natsURL)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error creating nats connection, %w", err)
 	}
 	ph.nc = nc
 	ph.privateSubscriptions = make(map[string]*nats.Subscription)
 	ph.publicSubscriptions = make(map[string]*nats.Subscription)
-	return ph, fmt.Errorf("error creating nats connection, %w", err)
+	return ph, nil
 }
 
 func (ph *PBMHandler) HandlePBMS(pbm []PBM, routes []string) error {
