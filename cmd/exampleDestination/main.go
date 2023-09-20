@@ -8,12 +8,12 @@ import (
 
 func main() {
 	dummyPBM := dummypbm.DummyPBM{
-		Name:    "DummyPBM1",
-		Latency: time.Second * 2,
+		PBMName: "DummyPBM1",
+		Latency: time.Millisecond * 10,
 	}
 	dummyPBM2 := dummypbm.DummyPBM{
-		Name:    "DummyPBM2",
-		Latency: time.Second * 1,
+		PBMName: "DummyPBM2",
+		Latency: time.Millisecond * 50,
 	}
 	pbmHandler, err := pbmlib.NewPBMHandler()
 	if err != nil {

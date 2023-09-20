@@ -112,7 +112,7 @@ func (ph *PBMHandler) handlePrivateRoutes(routes []string) error {
 			})
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("error subscribing to subject %s, err: %w", "", err)
 		}
 		ph.privateSubscriptions[ph.pbms[i].privateSubject] = sub
 
@@ -152,7 +152,7 @@ func (ph *PBMHandler) handlePublicRoutes(routes []string) error {
 			})
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("error subscribing to subject %s, err: %w", "", err)
 		}
 		ph.publicSubscriptions[subject] = sub
 	}
@@ -235,29 +235,21 @@ func createHandlerFromConfig() (*PBMHandler, error) {
 	}
 
 	pbmHandler.natsKey, err = getEnvironmentVariable("NATS_KEY")
-	pbmHandler.natsJWT, err = getEnvironmentVariable("NATS_JWT")
 	if err != nil {
 		return nil, err
 	}
 
 	pbmHandler.natsPrivateSubjectPrefix, err = getEnvironmentVariable("NATS_PRIVATE_SUBJECT_PREFIX")
-	pbmHandler.natsJWT, err = getEnvironmentVariable("NATS_JWT")
 	if err != nil {
 		return nil, err
 	}
 
 	pbmHandler.natsPublicSubject, err = getEnvironmentVariable("NATS_PUBLIC_SUBJECT")
-	pbmHandler.natsJWT, err = getEnvironmentVariable("NATS_JWT")
 	if err != nil {
 		return nil, err
 	}
 
 	pbmHandler.natsQueue = getEnvironmentVariableOrDefault("NATS_QUEUE", "EXAMPLE_DEST")
-	pbmHandler.natsJWT, err = getEnvironmentVariable("NATS_JWT")
-	if err != nil {
-		return nil, err
-	}
-
 	return &pbmHandler, nil
 }
 
