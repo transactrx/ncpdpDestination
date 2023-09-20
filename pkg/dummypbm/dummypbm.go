@@ -29,7 +29,7 @@ func (d *DummyPBM) Name() string {
 
 func (d *DummyPBM) Post(claim pbmlib.Claim, header map[string][]string, timeout time.Duration, privateMessage bool) ([]byte, map[string][]string, pbmlib.ErrorInfo) {
 
-	log.Printf("Got Message: %s", d.Name)
+	log.Printf("Got Message: %s", d.Name())
 	time.Sleep(d.Latency)
 	good := true
 	if d.lastResponseGood {
