@@ -112,7 +112,7 @@ func (ph *PBMHandler) handlePrivateRoutes(routes []string) error {
 			})
 		})
 		if err != nil {
-			return fmt.Errorf("error subscribing to subject %s, err: %w", "", err)
+			return fmt.Errorf("error subscribing to subject %s, err: %w", ph.pbms[i].privateSubject, err)
 		}
 		ph.privateSubscriptions[ph.pbms[i].privateSubject] = sub
 
@@ -152,7 +152,7 @@ func (ph *PBMHandler) handlePublicRoutes(routes []string) error {
 			})
 		})
 		if err != nil {
-			return fmt.Errorf("error subscribing to subject %s, err: %w", "", err)
+			return fmt.Errorf("error subscribing to subject %s, err: %w", subject, err)
 		}
 		ph.publicSubscriptions[subject] = sub
 	}
