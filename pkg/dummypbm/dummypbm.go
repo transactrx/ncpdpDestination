@@ -13,7 +13,7 @@ import (
 //	Shutdown() error
 
 type DummyPBM struct {
-	Name       string
+	PBMName    string
 	Latency    time.Duration
 	statistics pbmlib.Stats
 
@@ -23,10 +23,13 @@ type DummyPBM struct {
 func (d *DummyPBM) Start() error {
 	return nil
 }
+func (d *DummyPBM) Name() string {
+	return d.PBMName
+}
 
 func (d *DummyPBM) Post(claim pbmlib.Claim, header map[string][]string, timeout time.Duration, privateMessage bool) ([]byte, map[string][]string, pbmlib.ErrorInfo) {
 
-	log.Printf("Got Message: %s", d.Name)
+	log.Printf("Got Message: %s", d.Name())
 	time.Sleep(d.Latency)
 	good := true
 	if d.lastResponseGood {
