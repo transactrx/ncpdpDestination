@@ -67,7 +67,7 @@ func (response *Response) BuildResponseSuccess(claim Claim, startTime time.Time,
 	response.TransmissionId = claim.TransmissionId
 	response.InstanceId = claim.InstanceId
 	response.TenantId = claim.TenantId
-	response.Elapsed = fmt.Sprintf("%f", (time.Now().Sub(startTime).Seconds()))
+	response.Elapsed = fmt.Sprintf("%d", time.Now().Sub(startTime).Milliseconds())
 	now := time.Now().UTC()
 	formattedTime := now.Format("2006-01-02T15:04:05.9999999Z")
 	response.Created = formattedTime
@@ -86,7 +86,7 @@ func (response *Response) BuildResponseError(claim Claim, errorCode ErrorInfo, s
 
 	response.TransmissionId = claim.TransmissionId
 	response.InstanceId = claim.InstanceId
-	response.Elapsed = fmt.Sprintf("%f", (time.Now().Sub(startTime).Seconds()))
+	response.Elapsed = fmt.Sprintf("%d", time.Now().Sub(startTime).Milliseconds())
 	now := time.Now().UTC()
 	formattedTime := now.Format("2006-01-02T15:04:05.9999999Z")
 	response.Created = formattedTime
