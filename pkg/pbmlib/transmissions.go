@@ -67,7 +67,7 @@ func (response *Response) BuildResponseSuccess(claim Claim, startTime time.Time,
 	response.TransmissionId = claim.TransmissionId
 	response.InstanceId = claim.InstanceId
 	response.TenantId = claim.TenantId
-	response.Elapsed = fmt.Sprintf("%d", time.Now().Sub(startTime).Milliseconds())
+	response.Elapsed = fmt.Sprintf("%d", time.Now().Sub(startTime).Seconds()) // should be seconds as claim-normalizer x 1000 to get mseconds
 	now := time.Now().UTC()
 	formattedTime := now.Format("2006-01-02T15:04:05.9999999Z")
 	response.Created = formattedTime
