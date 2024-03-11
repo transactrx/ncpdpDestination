@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"syscall"
@@ -29,6 +30,7 @@ type PBMHandler struct {
 	natsKey                  string
 	natsPublicSubject        string
 	natsPrivateSubjectPrefix string
+	natsAppendPrivateRoute   bool
 	natsQueue                string
 	routes                   []string
 	nc                       *nats.Conn
@@ -64,17 +66,16 @@ func NewPBMHandler() (*PBMHandler, error) {
 func (ph *PBMHandler) HandlePBMS(pbm []PBM, routes []string) error {
 	ph.routes = routes
 	ph.pbms = make([]handledPBM, len(pbm))
-
 	for i, pbm := range pbm {
 		id := uuid.New().String()
 		ph.pbms[i] = handledPBM{
-			id:  id,
-			pbm: pbm,
+			id:             id,
+			pbm:            pbm,
+			privateSubject: ph.natsPrivateSubjectPrefix + "." + id,
 		}
 
-		// Private subjects should be optional
-		if ph.natsPrivateSubjectPrefix != "" {
-			ph.pbms[i].privateSubject = ph.natsPrivateSubjectPrefix + "." + id
+		if ph.natsAppendPrivateRoute {
+			ph.pbms[i].privateSubject = ph.pbms[i].privateSubject + "." + routes[i]
 		}
 	}
 
@@ -92,12 +93,7 @@ func (ph *PBMHandler) HandlePBMS(pbm []PBM, routes []string) error {
 }
 
 func (ph *PBMHandler) handlePrivateRoutes(routes []string) error {
-
 	for i := 0; i < len(ph.pbms); i++ {
-		if ph.pbms[i].privateSubject == "" {			
-			continue
-		}
-
 		sub, err := ph.nc.QueueSubscribe(ph.pbms[i].privateSubject, ph.natsQueue, func(msg *nats.Msg) {
 
 			//select leastBusyPbm with the least active calls;
@@ -290,14 +286,19 @@ func createHandlerFromConfig() (*PBMHandler, error) {
 		return nil, err
 	}
 
-	pbmHandler.natsPrivateSubjectPrefix = getEnvironmentVariableOrDefault("NATS_PRIVATE_SUBJECT_PREFIX", "")
+	pbmHandler.natsPrivateSubjectPrefix, err = getEnvironmentVariable("NATS_PRIVATE_SUBJECT_PREFIX")
+	if err != nil {
+		return nil, err
+	}
 
 	pbmHandler.natsPublicSubject, err = getEnvironmentVariable("NATS_PUBLIC_SUBJECT")
 	if err != nil {
 		return nil, err
 	}
 
+	pbmHandler.natsAppendPrivateRoute = getBoolOrDefault("NATS_PRIVATE_SUBJECT_APPEND_ROUTE", false)
 	pbmHandler.natsQueue = getEnvironmentVariableOrDefault("NATS_QUEUE", "EXAMPLE_DEST")
+
 	return &pbmHandler, nil
 }
 
@@ -314,4 +315,18 @@ func getEnvironmentVariableOrDefault(key, defaultValue string) string {
 		return defaultValue
 	}
 	return value
+}
+
+func getBoolOrDefault(key string, defaultValue bool) bool {
+	value := strings.TrimSpace(os.Getenv(key))
+	if value == "" {
+		return defaultValue
+	}
+
+	bValue, err := strconv.ParseBool(value)
+	if err != nil {
+		return defaultValue
+	}
+
+	return bValue
 }
