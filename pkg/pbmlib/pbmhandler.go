@@ -62,15 +62,19 @@ func NewPBMHandler() (*PBMHandler, error) {
 }
 
 func (ph *PBMHandler) HandlePBMS(pbm []PBM, routes []string) error {
-
 	ph.routes = routes
 	ph.pbms = make([]handledPBM, len(pbm))
+
 	for i, pbm := range pbm {
 		id := uuid.New().String()
 		ph.pbms[i] = handledPBM{
-			id:             id,
-			pbm:            pbm,
-			privateSubject: ph.natsPrivateSubjectPrefix + "." + id,
+			id:  id,
+			pbm: pbm,
+		}
+
+		// Private subjects should be optional
+		if ph.natsPrivateSubjectPrefix != "" {
+			ph.pbms[i].privateSubject = ph.natsPrivateSubjectPrefix + "." + id
 		}
 	}
 
@@ -90,6 +94,10 @@ func (ph *PBMHandler) HandlePBMS(pbm []PBM, routes []string) error {
 func (ph *PBMHandler) handlePrivateRoutes(routes []string) error {
 
 	for i := 0; i < len(ph.pbms); i++ {
+		if ph.pbms[i].privateSubject == "" {			
+			continue
+		}
+
 		sub, err := ph.nc.QueueSubscribe(ph.pbms[i].privateSubject, ph.natsQueue, func(msg *nats.Msg) {
 
 			//select leastBusyPbm with the least active calls;
@@ -282,10 +290,7 @@ func createHandlerFromConfig() (*PBMHandler, error) {
 		return nil, err
 	}
 
-	pbmHandler.natsPrivateSubjectPrefix, err = getEnvironmentVariable("NATS_PRIVATE_SUBJECT_PREFIX")
-	if err != nil {
-		return nil, err
-	}
+	pbmHandler.natsPrivateSubjectPrefix = getEnvironmentVariableOrDefault("NATS_PRIVATE_SUBJECT_PREFIX", "")
 
 	pbmHandler.natsPublicSubject, err = getEnvironmentVariable("NATS_PUBLIC_SUBJECT")
 	if err != nil {
