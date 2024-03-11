@@ -88,22 +88,19 @@ func (ph *PBMHandler) HandlePBMS(pbm []PBM, routes []string) error {
 }
 
 func (ph *PBMHandler) handlePrivateRoutes(routes []string) error {
+
 	for i := 0; i < len(ph.pbms); i++ {
-		sub, err := ph.nc.QueueSubscribe(ph.pbms[i].privateSubject, ph.natsQueue, func(msg *nats.Msg) {
+		privSubject := ph.pbms[i].privateSubject + "." + routes[i]
+
+		sub, err := ph.nc.QueueSubscribe(privSubject, ph.natsQueue, func(msg *nats.Msg) {
+
 			//select leastBusyPbm with the least active calls;
 			var privatePBM *handledPBM = nil
 			for i := 0; i < len(ph.pbms); i++ {
-
-				// Private subject will have route appended
-				if strings.HasPrefix(msg.Subject, ph.pbms[i].privateSubject) {
+				if privSubject == msg.Subject {
 					privatePBM = &ph.pbms[i]
 					break
 				}
-
-				// if ph.pbms[i].privateSubject == msg.Subject {
-				// 	privatePBM = &ph.pbms[i]
-				// 	break
-				// }
 			}
 			if privatePBM == nil {
 				//error
@@ -125,9 +122,9 @@ func (ph *PBMHandler) handlePrivateRoutes(routes []string) error {
 			})
 		})
 		if err != nil {
-			return fmt.Errorf("error subscribing to subject %s, err: %w", ph.pbms[i].privateSubject, err)
+			return fmt.Errorf("error subscribing to subject %s, err: %w", privSubject, err)
 		}
-		ph.privateSubscriptions[ph.pbms[i].privateSubject] = sub
+		ph.privateSubscriptions[privSubject] = sub
 
 	}
 
@@ -160,7 +157,15 @@ func (ph *PBMHandler) handlePublicRoutes(routes []string) error {
 					Header:  nats.Header(respHeader),
 					Subject: msg.Reply,
 				}
-				respMsg.Header.Add("privateSubject", leastBusyPbm.privateSubject)
+
+				// Strip route code, publisher expects prefix
+				replyToSubjectPrefix := leastBusyPbm.privateSubject
+				lastDot := strings.LastIndex(leastBusyPbm.privateSubject, ".")
+				if lastDot > 0 {
+					replyToSubjectPrefix = leastBusyPbm.privateSubject[:lastDot]
+				}
+
+				respMsg.Header.Add("privateSubject", replyToSubjectPrefix)
 				ph.nc.PublishMsg(&respMsg)
 			})
 		})
