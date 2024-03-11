@@ -233,6 +233,9 @@ func (hpbm *handledPBM) post(requestBuffer []byte, headers map[string][]string, 
 		// Prefix response with 17 byte header for pre-edits
 		if tranState == PreEditState {
 			responseString := string(responseBuffer)
+			if len(tranId) > 17 {
+				tranId = tranId[:17]
+			}
 			data := fmt.Sprintf("%-17s%s", tranId, responseString)
 			responseBuffer = []byte(data)
 		}
