@@ -158,14 +158,7 @@ func (ph *PBMHandler) handlePublicRoutes(routes []string) error {
 					Subject: msg.Reply,
 				}
 
-				// Strip route code, publisher expects prefix
-				replyToSubjectPrefix := leastBusyPbm.privateSubject
-				lastDot := strings.LastIndex(leastBusyPbm.privateSubject, ".")
-				if lastDot > 0 {
-					replyToSubjectPrefix = leastBusyPbm.privateSubject[:lastDot]
-				}
-
-				respMsg.Header.Add("privateSubject", replyToSubjectPrefix)
+				respMsg.Header.Add("privateSubject", leastBusyPbm.privateSubject)
 				ph.nc.PublishMsg(&respMsg)
 			})
 		})
