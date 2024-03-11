@@ -3,15 +3,24 @@ package pbmlib
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/nats-io/nats.go"
-	"github.com/transactrx/ncpdpDestination/pkg/natshelper"
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"sync/atomic"
 	"syscall"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/nats-io/nats.go"
+	"github.com/transactrx/ncpdpDestination/pkg/natshelper"
+)
+
+const (
+	StateHeader          = "transaction-state"
+	TransmissionIdHeader = "transmission-id"
+	PreEditState         = "preedit"
+	TripIndicator        = "T2"
 )
 
 type PBMHandler struct {
@@ -202,12 +211,43 @@ func (hpbm *handledPBM) post(requestBuffer []byte, headers map[string][]string, 
 		f(&resp, nil, &ErrorCode.TRX01)
 		return
 	}
+
 	clm.TimeRcvd = time.Now()
 	responseBuffer, responseHeaders, erroInfo := hpbm.pbm.Post(clm, headers, timeout, privateMessage)
 	if erroInfo.Code == ErrorCode.TRX00.Code {
-		//build response
+
+		// Get transmission ID
+		tranIdHeader, goodId := headers[TransmissionIdHeader]
+		tranId := ""
+		if goodId && len(tranIdHeader) > 0 {
+			tranId = tranIdHeader[0]
+		}
+
+		// Get transaction state
+		tranHeader, ok := headers[StateHeader]
+		tranState := ""
+		if ok && len(tranHeader) > 0 {
+			tranState = strings.ToLower(tranHeader[0])
+		}
+
+		// Prefix response with 17 byte header for pre-edits
+		if tranState == PreEditState {
+			responseString := string(responseBuffer)
+			data := fmt.Sprintf("%-17s%s", tranId, responseString)
+			responseBuffer = []byte(data)
+		}
+
+		// Build response
 		resp := Response{}
 		resp.BuildResponseSuccess(clm, clm.TimeRcvd, responseBuffer)
+
+		// Set pre-edit trip indicator
+		if tranState == PreEditState {
+			resp.PpeStatus = &PpeStatus{
+				Status: TripIndicator,
+			}
+		}
+
 		f(&resp, responseHeaders, &ErrorCode.TRX00)
 		return
 	}
