@@ -94,7 +94,7 @@ func (response *Response) BuildResponseError(claim Claim, errorCode ErrorInfo, s
 
 	response.TransmissionId = claim.TransmissionId
 	response.InstanceId = claim.InstanceId
-	response.Elapsed = fmt.Sprintf("%d", time.Now().Sub(startTime).Milliseconds())
+	response.Elapsed = fmt.Sprintf("%f", (time.Now().Sub(startTime).Seconds()))
 	now := time.Now().UTC()
 	formattedTime := now.Format("2006-01-02T15:04:05.9999999Z")
 	response.Created = formattedTime
