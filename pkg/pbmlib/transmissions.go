@@ -106,6 +106,7 @@ func (response *Response) BuildResponseError(claim Claim, errorCode ErrorInfo, s
 	response.From, _ = os.Hostname()
 	response.ReturnCode = "3" // failure
 	response.StatusCode = "200"
+	response.ErrorData = &errorCode
 	response.TransactionData.NcpdpData = GenerateError([]byte(claim.TransactionData.NcpdpData), errorCode)
 }
 
