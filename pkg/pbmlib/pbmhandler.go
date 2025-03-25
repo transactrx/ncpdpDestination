@@ -36,6 +36,7 @@ type PBMHandler struct {
 	publicSubscriptions      map[string]*nats.Subscription
 	privateSubscriptions     map[string]*nats.Subscription
 	overAllTimeOut           time.Duration
+	multiRouteRouting        bool
 }
 
 type handledPBM struct {
@@ -43,6 +44,7 @@ type handledPBM struct {
 	privateSubject string
 	pbm            PBM
 	activeCalls    atomic.Int32
+	route          string
 }
 
 func NewPBMHandler() (*PBMHandler, error) {
@@ -71,6 +73,7 @@ func (ph *PBMHandler) HandlePBMS(pbm []PBM, routes []string) error {
 			id:             id,
 			pbm:            pbm,
 			privateSubject: ph.natsPrivateSubjectPrefix + "." + id,
+			route:          routes[i],
 		}
 	}
 
@@ -138,15 +141,25 @@ func (ph *PBMHandler) handlePublicRoutes(routes []string) error {
 
 			//select leastBusyPbm with the least active calls;
 			var leastBusyPbm *handledPBM = nil
-			for i := 0; i < len(ph.pbms); i++ {
-
-				if leastBusyPbm == nil {
-					leastBusyPbm = &ph.pbms[i]
-				} else if ph.pbms[i].activeCalls.Load() < leastBusyPbm.activeCalls.Load() {
-					leastBusyPbm = &ph.pbms[i]
+			if !ph.multiRouteRouting {
+				for i := 0; i < len(ph.pbms); i++ {
+					if leastBusyPbm == nil {
+						leastBusyPbm = &ph.pbms[i]
+					} else if ph.pbms[i].activeCalls.Load() < leastBusyPbm.activeCalls.Load() {
+						leastBusyPbm = &ph.pbms[i]
+					}
+				}
+			} else {
+				msgRoute := strings.TrimPrefix(msg.Subject, ph.natsPublicSubject+".")
+				// Find the PBM.route that matches the route of incoming message
+				for i := range ph.pbms {
+					if ph.pbms[i].route == msgRoute {
+						leastBusyPbm = &ph.pbms[i]
+						break
+					}
 				}
 			}
-
+			// test for leastbusypbm != nil ?? and handle error
 			go leastBusyPbm.post(msg.Data, map[string][]string(msg.Header), ph.overAllTimeOut, false, func(response *Response, respHeader map[string][]string, err *ErrorInfo) {
 
 				if respHeader == nil {
@@ -294,6 +307,11 @@ func createHandlerFromConfig() (*PBMHandler, error) {
 		return nil, err
 	}
 
+	pbmHandler.multiRouteRouting, err = getBoolEnvironmentVariableOrDefault("MULTI_ROUTING_ENABLED", false)
+	if err != nil {
+		return nil, err
+	}
+
 	pbmHandler.natsQueue = getEnvironmentVariableOrDefault("NATS_QUEUE", "EXAMPLE_DEST")
 	return &pbmHandler, nil
 }
@@ -311,4 +329,13 @@ func getEnvironmentVariableOrDefault(key, defaultValue string) string {
 		return defaultValue
 	}
 	return value
+}
+func getBoolEnvironmentVariableOrDefault(key string, defaultValue bool) (bool, error) {
+	strValue := strings.ToLower(getEnvironmentVariableOrDefault(key, ""))
+	if strValue == "true" {
+		return true, nil
+	} else if strValue == "false" {
+		return false, nil
+	}
+	return defaultValue, nil
 }
