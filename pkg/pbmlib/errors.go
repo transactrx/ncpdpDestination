@@ -20,6 +20,9 @@ type ErrorCodes struct {
 	TRX08 ErrorInfo
 	TRX09 ErrorInfo
 	TRX10 ErrorInfo
+	TRX11 ErrorInfo
+	TRX12 ErrorInfo
+	TRX13 ErrorInfo
 	// add more codes here
 	TRX9999 ErrorInfo
 }
@@ -105,6 +108,27 @@ var ErrorCode = ErrorCodes{
 		Code:        "TRX10",
 		Description: "This error occurs when there was an issue while sending a POST request to the endpoint.",
 		Causes:      "Possible Causes: This error can be caused by missing or insufficient authorization headers, tokens, or permissions. It may also indicate a problem on the server's side.",
+	},
+	TRX11: ErrorInfo{
+		Message:     "Claim-Response TrackingId Mismatch",
+		HttpCode:    "409", // 409 Conflict is more appropriate for data mismatch or conflict issues
+		Code:        "TRX11",
+		Description: "This error occurs when the TrackingId in the claim does not match the TrackingId in the response, indicating a conflict or inconsistency.",
+		Causes:      "Possible Causes: This error can be caused by a mismatch between the transmitted TrackingId in the claim and the one returned in the response. It may also result from system synchronization issues or faulty data mapping during transmission.",
+	},
+	TRX12: ErrorInfo{
+		Message:     "Invalid Response Format and/or Length",
+		HttpCode:    "400", // 400 Bad Request is appropriate for invalid format or data issues
+		Code:        "TRX12",
+		Description: "This error occurs when the response received from the server is in an invalid format or does not meet the expected length or structure.",
+		Causes:      "Possible Causes: This error can be triggered by incorrect data being returned by the server, malformed responses, or discrepancies between the expected and actual content length. It can also be caused by misconfigured server-side responses or validation failures.",
+	},
+	TRX13: ErrorInfo{
+		Message:     "Third Party Link Unavailable",
+		HttpCode:    "500",
+		Code:        "TRX13",
+		Description: "This error indicates that there is not a readily available connection to the third party.",
+		Causes:      "Possible Causes: Network issues, endpoint URL misconfiguration, or the endpoint is temporarily unavailable.",
 	},
 	TRX9999: ErrorInfo{
 		Message:     "Host Processing PBMError",
