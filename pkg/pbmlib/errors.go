@@ -23,6 +23,7 @@ type ErrorCodes struct {
 	TRX11 ErrorInfo
 	TRX12 ErrorInfo
 	TRX13 ErrorInfo
+	TRX14 ErrorInfo
 	// add more codes here
 	TRX9999 ErrorInfo
 }
@@ -129,6 +130,13 @@ var ErrorCode = ErrorCodes{
 		Code:        "TRX13",
 		Description: "This error indicates that there is not a readily available connection to the third party.",
 		Causes:      "Possible Causes: Network issues, endpoint URL misconfiguration, or the endpoint is temporarily unavailable.",
+	},
+	TRX14: ErrorInfo{
+		Message:     "Timeout Waiting for Available Channel",
+		HttpCode:    "500",
+		Code:        "TRX14",
+		Description: "This error occurs when the system is unable to allocate or locate a valid channel required to transmit or persist data over a secure (TLS) connection.",
+		Causes:      "Possible Causes: Channel pool exhaustion, misconfigured TLS link persistence, synchronization issues between nodes, or resource limitations preventing a new channel from being established.",
 	},
 	TRX9999: ErrorInfo{
 		Message:     "Host Processing PBMError",
