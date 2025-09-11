@@ -24,6 +24,9 @@ type ErrorCodes struct {
 	TRX12 ErrorInfo
 	TRX13 ErrorInfo
 	TRX14 ErrorInfo
+	TRX15 ErrorInfo
+	TRX16 ErrorInfo
+
 	// add more codes here
 	TRX9999 ErrorInfo
 }
@@ -137,6 +140,20 @@ var ErrorCode = ErrorCodes{
 		Code:        "TRX14",
 		Description: "This error occurs when the system is unable to allocate or locate a valid channel required to transmit or persist data over a secure (TLS) connection.",
 		Causes:      "Possible Causes: Channel pool exhaustion, misconfigured TLS link persistence, synchronization issues between nodes, or resource limitations preventing a new channel from being established.",
+	},
+	TRX15: ErrorInfo{
+		Message:     "Unable to Acquire Access Token",
+		HttpCode:    "502", // Bad Gateway: upstream auth dependency failed
+		Code:        "TRX15",
+		Description: "The system could not obtain an OAuth access token required to authenticate with the endpoint. The downstream POST was not attempted.",
+		Causes:      "Possible Causes: Invalid client credentials, unreachable token endpoint, TLS/hostname issues, non-200 response from token endpoint, unsupported grant_type, or client/secret misconfiguration. Check system clock for skew.",
+	},
+	TRX16: ErrorInfo{
+		Message:     "Token Acquisition Misconfiguration",
+		HttpCode:    "500",
+		Code:        "TRX16",
+		Description: "Local configuration prevented token acquisition (e.g., bad token URL or missing/invalid client credentials).",
+		Causes:      "Possible Causes: Empty or quoted TokenURL, missing client_id/client_secret, or malformed request.",
 	},
 	TRX9999: ErrorInfo{
 		Message:     "Host Processing PBMError",
